@@ -2,7 +2,23 @@
 
 This repository adapts **[TransDreamer](https://github.com/danijar/dreamerv2)**—a Transformer-based Reinforcement Learning World Model originally designed for image-based environments like Atari—to process **tabular financial transaction data** using the [PaySim Dataset](https://www.kaggle.com/datasets/ealaxi/paysim1).
 
-## 🚀 What We Did
+## 🚀 What We Did & Architecture
+
+```mermaid
+graph TD
+    A[(paysim.csv)] -->|Tabular Data| B[PaySimEnv Gym Wrapper]
+    B -->|7D State Vector| C[Tabular Encoder MLP]
+    C -->|d_model=600| D((Transformer RSSM\nWorld Model))
+    
+    D -->|Reconstruction| E[Tabular Decoder MLP]
+    D -->|Reward Prediction| F[Dense Decoder]
+    D -->|Action Policy| G[Actor Decoder]
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style E fill:#bfb,stroke:#333,stroke-width:2px
+```
 
 TransDreamer natively expects 3D image tensors `(C, H, W)` and relies heavily on Convolutional Neural Networks (CNNs). To run it on tabular fraud data, we essentially performed a "brain transplant" on the architecture:
 
