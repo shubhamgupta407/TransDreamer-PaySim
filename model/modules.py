@@ -18,11 +18,13 @@ class RSSMWorldModel(nn.Module):
     super().__init__()
 
     self.dynamic = RSSM(cfg)
-    self.img_dec = ImgDecoder(cfg)
-
     self.stoch_discrete = cfg.arch.world_model.RSSM.stoch_discrete
     self.stoch_size = cfg.arch.world_model.RSSM.stoch_size
     dense_input_size = cfg.arch.world_model.RSSM.deter_size + self.stoch_size * self.stoch_discrete
+    if cfg.env.name == 'paysim':
+      self.img_dec = TabularDecoder(cfg, dense_input_size)
+    else:
+      self.img_dec = ImgDecoder(cfg)
     self.reward = DenseDecoder(dense_input_size, cfg.arch.world_model.reward.layers, cfg.arch.world_model.reward.num_units, (1,),
                                act=cfg.arch.world_model.reward.act)
 
@@ -295,7 +297,10 @@ class RSSM(nn.Module):
     self.post_no_deter = cfg.arch.world_model.RSSM.post_no_deter
     self.dec_img_input = cfg.dec_img_input
 
-    self.img_enc = ImgEncoder(cfg)
+    if cfg.env.name == 'paysim':
+      self.img_enc = TabularEncoder(cfg)
+    else:
+      self.img_enc = ImgEncoder(cfg)
 
     weight_init = cfg.arch.world_model.RSSM.weight_init
     # RNN cell
@@ -520,6 +525,39 @@ class RSSM(nn.Module):
 
     return post_state
     
+class TabularEncoder(nn.Module):
+  def __init__(self, cfg):
+    super().__init__()
+    self.enc = nn.Sequential(
+      Linear(7, 256, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(256, 512, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(512, 1536, bias=True, weight_init='xavier'),
+      nn.ELU()
+    )
+
+  def forward(self, ipts):
+    return self.enc(ipts)
+
+class TabularDecoder(nn.Module):
+  def __init__(self, cfg, input_size):
+    super().__init__()
+    self.dec = nn.Sequential(
+      Linear(input_size, 512, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(512, 256, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(256, 7, bias=True, weight_init='xavier'),
+    )
+    self.shape = (7,)
+    self.rec_sigma = cfg.arch.world_model.rec_sigma
+
+  def forward(self, ipts):
+    dec_o = self.dec(ipts)
+    dec_pdf = Independent(Normal(dec_o, self.rec_sigma * dec_o.new_ones(dec_o.shape)), len(self.shape))
+    return dec_pdf
+
 class ImgEncoder(nn.Module):
 
   def __init__(self, cfg):

@@ -91,7 +91,7 @@ class OneHotAction():
     return self._env.reset()
 
   def sample_random_action(self):
-    action = np.zeros((1, self._env.action_space.n,), dtype=np.float)
+    action = np.zeros((1, self._env.action_space.n,), dtype=float)
     idx = np.random.randint(0, self._env.action_space.n, size=(1,))[0]
     action[0, idx] = 1
     return action

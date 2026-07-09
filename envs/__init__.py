@@ -3,6 +3,7 @@ import numpy as np
 from .atari_env import OneHotAction, TimeLimit, Collect, RewardObs
 from .atari_env import Atari
 from .crafter import Crafter
+from .paysim_env import PaySimEnv
 from .tools import count_episodes, save_episodes, video_summary
 import pathlib
 import pdb
@@ -25,7 +26,8 @@ def summarize_episode(episode, config, datadir, writer, prefix):
   with (pathlib.Path(config.logdir) / 'metrics.jsonl').open('a') as f:
     f.write(json.dumps(dict([('step', env_step)] + metrics)) + '\n')
   [writer.add_scalar('sim/' + k, v, env_step) for k, v in metrics]
-  tools.video_summary(writer, f'sim/{prefix}/video', episode['image'][None, :1000], env_step)
+  if config.env.name != 'paysim_dummy':
+    tools.video_summary(writer, f'sim/{prefix}/video', episode['image'][None, :1000], env_step)
 
   if 'episode_done' in episode:
     episode_done = episode['episode_done']
@@ -58,6 +60,11 @@ def make_env(cfg, writer, prefix, datadir, store, seed=0):
 
   elif suite == 'crafter':
     env = Crafter(task, (64, 64), seed)
+    env = OneHotAction(env)
+
+  elif suite == 'paysim':
+    csv_path = cfg.env.paysim_csv_path if hasattr(cfg.env, 'paysim_csv_path') else '/Users/shubhamraj407/Desktop/BaseLine-Experiment/paysim.csv'
+    env = PaySimEnv(csv_path, max_steps=cfg.env.max_steps, seed=seed)
     env = OneHotAction(env)
 
   else:

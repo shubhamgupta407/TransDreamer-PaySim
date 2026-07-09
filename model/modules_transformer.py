@@ -35,7 +35,10 @@ class TransformerWorldModel(nn.Module):
     else:
       dense_input_size = d_model + self.stoch_size
 
-    self.img_dec = ImgDecoder(cfg, dense_input_size)
+    if cfg.env.name == 'paysim':
+      self.img_dec = TabularDecoder(cfg, dense_input_size)
+    else:
+      self.img_dec = ImgDecoder(cfg, dense_input_size)
     self.reward = DenseDecoder(dense_input_size, cfg.arch.world_model.reward.layers, cfg.arch.world_model.reward.num_units, (1,),
                                act=cfg.arch.world_model.reward.act)
 
@@ -253,7 +256,10 @@ class TransformerDynamic(nn.Module):
     self.pre_lnorm = cfg.arch.world_model.transformer.pre_lnorm
     self.act_after_emb = cfg.arch.world_model.act_after_emb
 
-    self.img_enc = ImgEncoder(cfg)
+    if cfg.env.name == 'paysim':
+      self.img_enc = TabularEncoder(cfg)
+    else:
+      self.img_enc = ImgEncoder(cfg)
 
     weight_init = cfg.arch.world_model.RSSM.weight_init
     self.cell = Transformer(cfg.arch.world_model.transformer)
@@ -502,6 +508,39 @@ class TransformerDynamic(nn.Module):
       }
 
     return state
+
+class TabularEncoder(nn.Module):
+  def __init__(self, cfg):
+    super().__init__()
+    self.enc = nn.Sequential(
+      Linear(7, 256, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(256, 512, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(512, 1536, bias=True, weight_init='xavier'),
+      nn.ELU()
+    )
+
+  def forward(self, ipts):
+    return self.enc(ipts)
+
+class TabularDecoder(nn.Module):
+  def __init__(self, cfg, input_size):
+    super().__init__()
+    self.dec = nn.Sequential(
+      Linear(input_size, 512, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(512, 256, bias=True, weight_init='xavier'),
+      nn.ELU(),
+      Linear(256, 7, bias=True, weight_init='xavier'),
+    )
+    self.shape = (7,)
+    self.rec_sigma = cfg.arch.world_model.rec_sigma
+
+  def forward(self, ipts):
+    dec_o = self.dec(ipts)
+    dec_pdf = Independent(Normal(dec_o, self.rec_sigma * dec_o.new_ones(dec_o.shape)), len(self.shape))
+    return dec_pdf
 
 class ImgEncoder(nn.Module):
 
