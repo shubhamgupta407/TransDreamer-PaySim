@@ -2,7 +2,7 @@
 
 This repository adapts **[TransDreamer](https://github.com/danijar/dreamerv2)**—a Transformer-based Reinforcement Learning World Model originally designed for image-based environments like Atari—to process **tabular financial transaction data** using the AMLSim dataset.
 
-## 🚀 What We Did & Architecture
+##  What We Did & Architecture
 
 ```mermaid
 flowchart LR
