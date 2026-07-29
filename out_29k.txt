@@ -1,0 +1,32 @@
+Using device: cpu
+Initializing environment...
+Loading ../aml_sim/outputs/10K/tx_log.csv into AMLSimEnv...
+Grouping AMLSim dataset by nameOrig (account trajectories)...
+Initializing TransDreamer Model...
+Loading checkpoint model_000029001.pth...
+
+--- Feeding History (10 steps) ---
+Step 1: Actual | Type: 1, Amount: $754.83, Old Bal: $53935.64, New Bal: $53180.80
+Step 2: Actual | Type: 1, Amount: $247.60, Old Bal: $53180.80, New Bal: $52933.20
+Step 3: Actual | Type: 1, Amount: $333.60, Old Bal: $53578.78, New Bal: $53245.17
+Step 4: Actual | Type: 1, Amount: $826.34, Old Bal: $53749.17, New Bal: $52922.83
+Step 5: Actual | Type: 1, Amount: $978.05, Old Bal: $52922.83, New Bal: $51944.77
+Step 6: Actual | Type: 1, Amount: $539.36, Old Bal: $51944.77, New Bal: $51405.41
+Step 7: Actual | Type: 1, Amount: $122.72, Old Bal: $51405.41, New Bal: $51282.68
+Step 8: Actual | Type: 1, Amount: $401.07, Old Bal: $51282.68, New Bal: $50881.60
+Step 9: Actual | Type: 1, Amount: $740.55, Old Bal: $50881.60, New Bal: $50141.05
+Step 10: Actual | Type: 1, Amount: $174.03, Old Bal: $50554.98, New Bal: $50380.95
+
+--- Predicting Novel Future State ---
+PREDICTED NEXT TRANSACTION:
+  > Transaction Type: UNKNOWN
+  > Amount:           $-1,341.00
+  > Old Balance:      $57,170.97
+  > New Balance:      $57,629.41
+  > Reward/Anomaly:   -0.4631 (-1 indicates predicted anomalous behavior)
+
+--- Actual Next State for Comparison ---
+  > Transaction Type: TRANSFER
+  > Amount:           $565.83
+  > Old Balance:      $50,380.95
+  > New Balance:      $49,815.11

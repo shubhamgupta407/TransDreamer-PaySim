@@ -4,6 +4,7 @@ from .atari_env import OneHotAction, TimeLimit, Collect, RewardObs
 from .atari_env import Atari
 from .crafter import Crafter
 from .paysim_env import PaySimEnv
+from .amlsim_env import AMLSimEnv
 from .tools import count_episodes, save_episodes, video_summary
 import pathlib
 import pdb
@@ -26,7 +27,7 @@ def summarize_episode(episode, config, datadir, writer, prefix):
   with (pathlib.Path(config.logdir) / 'metrics.jsonl').open('a') as f:
     f.write(json.dumps(dict([('step', env_step)] + metrics)) + '\n')
   [writer.add_scalar('sim/' + k, v, env_step) for k, v in metrics]
-  if config.env.name != 'paysim_dummy':
+  if 'paysim' not in config.env.name and 'amlsim' not in config.env.name:
     tools.video_summary(writer, f'sim/{prefix}/video', episode['image'][None, :1000], env_step)
 
   if 'episode_done' in episode:
@@ -65,6 +66,11 @@ def make_env(cfg, writer, prefix, datadir, store, seed=0):
   elif suite == 'paysim':
     csv_path = cfg.env.paysim_csv_path if hasattr(cfg.env, 'paysim_csv_path') else '/Users/shubhamraj407/Desktop/BaseLine-Experiment/paysim.csv'
     env = PaySimEnv(csv_path, max_steps=cfg.env.max_steps, seed=seed)
+    env = OneHotAction(env)
+
+  elif suite == 'amlsim':
+    csv_path = cfg.env.amlsim_csv_path if hasattr(cfg.env, 'amlsim_csv_path') else '../aml_sim/outputs/10K/tx_log.csv'
+    env = AMLSimEnv(csv_path, max_steps=cfg.env.max_steps, seed=seed)
     env = OneHotAction(env)
 
   else:

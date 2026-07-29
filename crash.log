@@ -1,0 +1,386 @@
+======== Settings ========
+{'arch': {'H': 15,
+          'actor': {'act': 'elu',
+                    'actor_loss_type': 'reinforce',
+                    'aggregator': 'none',
+                    'dist': 'onehot',
+                    'init_std': 5.0,
+                    'layers': 4,
+                    'num_units': 400},
+          'decoder': CfgNode({'dec_type': 'conv'}),
+          'local_state': False,
+          'mem_size': 100000,
+          'patch_size': 32,
+          'prefill': 1000,
+          'q_trans': False,
+          'use_pcont': True,
+          'value': {'act': 'elu',
+                    'dist': 'normal',
+                    'layers': 4,
+                    'num_units': 400},
+          'world_model': {'RSSM': {'ST': True,
+                                   'act': 'elu',
+                                   'deter_size': 600,
+                                   'hidden_size': 600,
+                                   'post_no_deter': False,
+                                   'rnn_type': 'LayerNormGRUV2',
+                                   'stoch_discrete': 32,
+                                   'stoch_size': 32,
+                                   'weight_init': 'xavier'},
+                          'act_after_emb': True,
+                          'anneal_world_model': False,
+                          'discrete_type': 'discrete',
+                          'input_type': 'image',
+                          'pcont': {'act': 'elu',
+                                    'dist': 'binary',
+                                    'layers': 4,
+                                    'num_units': 400},
+                          'q_emb_action': False,
+                          'q_transformer': {'activation': 'relu',
+                                            'd_ff_inner': 1024,
+                                            'd_inner': 64,
+                                            'd_model': 600,
+                                            'deter_type': 'concat_o',
+                                            'dropatt': 0.1,
+                                            'dropout': 0.1,
+                                            'embedding_type': 'linear',
+                                            'gating': False,
+                                            'last_ln': False,
+                                            'max_time': 2000,
+                                            'n_layers': 2,
+                                            'num_heads': 8,
+                                            'pos_enc': 'temporal',
+                                            'pre_lnorm': True,
+                                            'q_emb_action': False},
+                          'rec_sigma': 0.3,
+                          'reward': {'act': 'elu',
+                                     'dist': 'normal',
+                                     'layers': 4,
+                                     'num_units': 400},
+                          'reward_layer': 0,
+                          'std_type': 'sigmoid2',
+                          'temp_decay_steps': 1000000.0,
+                          'temp_end': 0.001,
+                          'temp_start': 2.0,
+                          'train_wm_steps': 1,
+                          'transformer': {'activation': 'relu',
+                                          'd_ff_inner': 1024,
+                                          'd_inner': 64,
+                                          'd_model': 600,
+                                          'deter_type': 'concat_o',
+                                          'dropatt': 0.1,
+                                          'dropout': 0.1,
+                                          'embedding_type': 'linear',
+                                          'enc_pos': False,
+                                          'gating': False,
+                                          'last_ln': False,
+                                          'max_time': 2000,
+                                          'n_layers': 6,
+                                          'num_heads': 8,
+                                          'pos_enc': 'temporal',
+                                          'pre_lnorm': True,
+                                          'warm_up': False}}},
+ 'checkpoint': CfgNode({'checkpoint_dir': './logs/amlsim', 'max_num': 10}),
+ 'data': CfgNode({'datadir': './logs/amlsim'}),
+ 'debug': False,
+ 'env': {'action_repeat': 1,
+         'action_size': 2,
+         'all_actions': True,
+         'grayscale': True,
+         'life_done': False,
+         'max_steps': 1000,
+         'name': 'amlsim_dummy',
+         'precision': 32,
+         'time_limit': 1000,
+         'time_penalty': 0.0},
+ 'eval_steps': 100,
+ 'exp_name': 'amlsim_baseline',
+ 'logdir': './logs/amlsim',
+ 'loss': {'ent_scale': 0.001,
+          'free_nats': 0.0,
+          'kl_balance': 0.8,
+          'kl_scale': 0.1,
+          'pcont_scale': 5.0},
+ 'model': 'dreamer_transformer',
+ 'optimize': {'actor_lr': 4e-05,
+              'base_lr': 0.0002,
+              'decay_step': 1600000.0,
+              'discount_scale': 5.0,
+              'end_lr': 0.0001,
+              'eps': 1e-05,
+              'exp_rate': 0.5,
+              'grad_clip': 100.0,
+              'model_lr': 0.0002,
+              'optimizer': 'adamW',
+              'reward_scale': 1.0,
+              'value_lr': 0.0001,
+              'warmup_iter': 64000.0,
+              'weight_decay': 1e-06},
+ 'resume': False,
+ 'resume_ckpt': '',
+ 'rl': {'discount': 0.999,
+        'expl_amount': 0.0,
+        'expl_decay': 200000.0,
+        'expl_min': 0.0,
+        'expl_type': 'epsilon_greedy',
+        'lambda_': 0.95,
+        'r_transform': 'tanh'},
+ 'run_id': 'run_0',
+ 'seed': 0,
+ 'slow_update_step': 100,
+ 'total_steps': 100000.0,
+ 'train': {'batch_length': 50,
+           'batch_size': 50,
+           'checkpoint_every_step': 1000.0,
+           'eval_every_step': 1000.0,
+           'imag_last_T': False,
+           'log_every_step': 100.0,
+           'log_grad': False,
+           'n_sample': 10,
+           'print_every_step': 20,
+           'refresh_data_every': 10000.0,
+           'test_every_step': 100000.0,
+           'train_every': 16,
+           'train_steps': 100}}
+======== Model ========
+TransDreamer(
+  (world_model): TransformerWorldModel(
+    (dynamic): TransformerDynamic(
+      (img_enc): TabularEncoder(
+        (enc): Sequential(
+          (0): Linear(
+            (net): Linear(in_features=7, out_features=256, bias=True)
+          )
+          (1): ELU(alpha=1.0)
+          (2): Linear(
+            (net): Linear(in_features=256, out_features=512, bias=True)
+          )
+          (3): ELU(alpha=1.0)
+          (4): Linear(
+            (net): Linear(in_features=512, out_features=1536, bias=True)
+          )
+          (5): ELU(alpha=1.0)
+        )
+      )
+      (cell): Transformer(
+        (pos_embs): PositionalEmbedding()
+        (drop): Dropout(p=0.1, inplace=False)
+        (layers): ModuleList(
+          (0-5): 6 x TransformerEncoderLayer(
+            (mah): MultiheadAttention(
+              (q_net): Linear(
+                (net): Linear(in_features=600, out_features=512, bias=False)
+              )
+              (k_net): Linear(
+                (net): Linear(in_features=600, out_features=512, bias=False)
+              )
+              (v_net): Linear(
+                (net): Linear(in_features=600, out_features=512, bias=False)
+              )
+              (out_net): Linear(
+                (net): Linear(in_features=512, out_features=600, bias=False)
+              )
+              (drop): Dropout(p=0.1, inplace=False)
+              (dropatt): Dropout(p=0.1, inplace=False)
+              (layer_norm): LayerNorm((600,), eps=1e-05, elementwise_affine=True)
+            )
+            (pos_ff): PositionwiseFF(
+              (CoreNet): Sequential(
+                (0): Linear(
+                  (net): Linear(in_features=600, out_features=1024, bias=True)
+                )
+                (1): ReLU(inplace=True)
+                (2): Linear(
+                  (net): Linear(in_features=1024, out_features=600, bias=True)
+                )
+                (3): Dropout(p=0.1, inplace=False)
+              )
+              (layer_norm): LayerNorm((600,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+        )
+      )
+      (act_stoch_mlp): Linear(
+        (net): Linear(in_features=1026, out_features=600, bias=True)
+      )
+      (post_stoch_mlp): MLP(
+        (enc): Sequential(
+          (0): Linear(
+            (net): Linear(in_features=1536, out_features=600, bias=True)
+          )
+          (1): ELU(alpha=1.0)
+          (2): Linear(
+            (net): Linear(in_features=600, out_features=1024, bias=True)
+          )
+        )
+      )
+      (prior_stoch_mlp): MLP(
+        (enc): Sequential(
+          (0): Linear(
+            (net): Linear(in_features=3600, out_features=600, bias=True)
+          )
+          (1): ELU(alpha=1.0)
+          (2): Linear(
+            (net): Linear(in_features=600, out_features=1024, bias=True)
+          )
+        )
+      )
+    )
+    (img_dec): TabularDecoder(
+      (dec): Sequential(
+        (0): Linear(
+          (net): Linear(in_features=4624, out_features=512, bias=True)
+        )
+        (1): ELU(alpha=1.0)
+        (2): Linear(
+          (net): Linear(in_features=512, out_features=256, bias=True)
+        )
+        (3): ELU(alpha=1.0)
+        (4): Linear(
+          (net): Linear(in_features=256, out_features=7, bias=True)
+        )
+      )
+    )
+    (reward): DenseDecoder(
+      (dec): Sequential(
+        (0): Linear(
+          (net): Linear(in_features=4624, out_features=400, bias=True)
+        )
+        (1): ELU(alpha=1.0)
+        (2): Linear(
+          (net): Linear(in_features=400, out_features=400, bias=True)
+        )
+        (3): ELU(alpha=1.0)
+        (4): Linear(
+          (net): Linear(in_features=400, out_features=400, bias=True)
+        )
+        (5): ELU(alpha=1.0)
+        (6): Linear(
+          (net): Linear(in_features=400, out_features=400, bias=True)
+        )
+        (7): ELU(alpha=1.0)
+        (8): Linear(
+          (net): Linear(in_features=400, out_features=1, bias=True)
+        )
+      )
+    )
+    (pcont): DenseDecoder(
+      (dec): Sequential(
+        (0): Linear(
+          (net): Linear(in_features=4624, out_features=400, bias=True)
+        )
+        (1): ELU(alpha=1.0)
+        (2): Linear(
+          (net): Linear(in_features=400, out_features=400, bias=True)
+        )
+        (3): ELU(alpha=1.0)
+        (4): Linear(
+          (net): Linear(in_features=400, out_features=400, bias=True)
+        )
+        (5): ELU(alpha=1.0)
+        (6): Linear(
+          (net): Linear(in_features=400, out_features=400, bias=True)
+        )
+        (7): ELU(alpha=1.0)
+        (8): Linear(
+          (net): Linear(in_features=400, out_features=1, bias=True)
+        )
+      )
+    )
+  )
+  (actor): ActionDecoder(
+    (dec): Sequential(
+      (0): Linear(
+        (net): Linear(in_features=4624, out_features=400, bias=True)
+      )
+      (1): ELU(alpha=1.0)
+      (2): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (3): ELU(alpha=1.0)
+      (4): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (5): ELU(alpha=1.0)
+      (6): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (7): ELU(alpha=1.0)
+      (8): Linear(
+        (net): Linear(in_features=400, out_features=2, bias=True)
+      )
+    )
+  )
+  (value): DenseDecoder(
+    (dec): Sequential(
+      (0): Linear(
+        (net): Linear(in_features=4624, out_features=400, bias=True)
+      )
+      (1): ELU(alpha=1.0)
+      (2): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (3): ELU(alpha=1.0)
+      (4): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (5): ELU(alpha=1.0)
+      (6): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (7): ELU(alpha=1.0)
+      (8): Linear(
+        (net): Linear(in_features=400, out_features=1, bias=True)
+      )
+    )
+  )
+  (slow_value): DenseDecoder(
+    (dec): Sequential(
+      (0): Linear(
+        (net): Linear(in_features=4624, out_features=400, bias=True)
+      )
+      (1): ELU(alpha=1.0)
+      (2): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (3): ELU(alpha=1.0)
+      (4): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (5): ELU(alpha=1.0)
+      (6): Linear(
+        (net): Linear(in_features=400, out_features=400, bias=True)
+      )
+      (7): ELU(alpha=1.0)
+      (8): Linear(
+        (net): Linear(in_features=400, out_features=1, bias=True)
+      )
+    )
+  )
+)
+config file saved to ./logs/amlsim/amlsim_baseline/amlsim_dummy/run_0/config.yaml
+Loading /Users/shubhamraj407/Desktop/BaseLine-Experiment/aml_sim/outputs/1K/tx_log.csv into AMLSimEnv...
+Grouping AMLSim dataset by nameOrig (account trajectories)...
+Loading /Users/shubhamraj407/Desktop/BaseLine-Experiment/aml_sim/outputs/1K/tx_log.csv into AMLSimEnv...
+Grouping AMLSim dataset by nameOrig (account trajectories)...
+collected 1162 steps. Start training...
+/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torchvision/io/image.py:14: UserWarning: Failed to load image Python extension: 'dlopen(/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torchvision/image.so, 0x0006): Library not loaded: @rpath/libjpeg.9.dylib
+  Referenced from: <CAF361F5-1CAC-3EBE-9FC4-4B823D275CAA> /Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torchvision/image.so
+  Reason: tried: '/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torchvision/../../../libjpeg.9.dylib' (no such file), '/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torchvision/../../../libjpeg.9.dylib' (no such file), '/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/lib-dynload/../../libjpeg.9.dylib' (no such file), '/Users/shubhamraj407/miniconda3/envs/trans_dreamer/bin/../lib/libjpeg.9.dylib' (no such file)'If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?
+  warn(
+/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/gym/envs/registration.py:307: DeprecationWarning: The package name gym_minigrid has been deprecated in favor of minigrid. Please uninstall gym_minigrid and install minigrid with `pip install minigrid`. Future releases will be maintained under the new package name minigrid.
+  fn()
+Traceback (most recent call last):
+  File "main.py", line 44, in <module>
+    task(model, cfg, device)
+  File "/Users/shubhamraj407/Desktop/BaseLine-Experiment/TransDreamer/engine/train_dreamer_transformer.py", line 190, in train
+    model.write_logs(logs, traj, global_step, writer)
+  File "/Users/shubhamraj407/Desktop/BaseLine-Experiment/TransDreamer/model/transdreamer.py", line 74, in write_logs
+    writer.add_video('train/rec - gt',
+  File "/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torch/utils/tensorboard/writer.py", line 778, in add_video
+    video(tag, vid_tensor, fps), global_step, walltime
+  File "/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torch/utils/tensorboard/summary.py", line 643, in video
+    tensor = _prepare_video(tensor)
+  File "/Users/shubhamraj407/miniconda3/envs/trans_dreamer/lib/python3.8/site-packages/torch/utils/tensorboard/_utils.py", line 50, in _prepare_video
+    b, t, c, h, w = V.shape
+ValueError: not enough values to unpack (expected 5, got 3)

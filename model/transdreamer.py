@@ -71,9 +71,10 @@ class TransDreamer(nn.Module):
     rec_img = logs['dec_img']
     gt_img = logs['gt_img']  # B, {1:T}, C, H, W
 
-    writer.add_video('train/rec - gt',
-                      torch.cat([gt_img[:4], rec_img[:4]], dim=-2).clamp(0., 1.).cpu(),
-                      global_step=global_step)
+    if len(gt_img.shape) == 5:
+      writer.add_video('train/rec - gt',
+                        torch.cat([gt_img[:4], rec_img[:4]], dim=-2).clamp(0., 1.).cpu(),
+                        global_step=global_step)
 
     for k, v in logs.items():
 

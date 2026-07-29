@@ -21,7 +21,7 @@ class RSSMWorldModel(nn.Module):
     self.stoch_discrete = cfg.arch.world_model.RSSM.stoch_discrete
     self.stoch_size = cfg.arch.world_model.RSSM.stoch_size
     dense_input_size = cfg.arch.world_model.RSSM.deter_size + self.stoch_size * self.stoch_discrete
-    if cfg.env.name == 'paysim':
+    if 'paysim' in cfg.env.name or 'amlsim' in cfg.env.name:
       self.img_dec = TabularDecoder(cfg, dense_input_size)
     else:
       self.img_dec = ImgDecoder(cfg)
@@ -297,7 +297,7 @@ class RSSM(nn.Module):
     self.post_no_deter = cfg.arch.world_model.RSSM.post_no_deter
     self.dec_img_input = cfg.dec_img_input
 
-    if cfg.env.name == 'paysim':
+    if 'paysim' in cfg.env.name or 'amlsim' in cfg.env.name:
       self.img_enc = TabularEncoder(cfg)
     else:
       self.img_enc = ImgEncoder(cfg)

@@ -35,7 +35,7 @@ class TransformerWorldModel(nn.Module):
     else:
       dense_input_size = d_model + self.stoch_size
 
-    if cfg.env.name == 'paysim':
+    if 'paysim' in cfg.env.name or 'amlsim' in cfg.env.name:
       self.img_dec = TabularDecoder(cfg, dense_input_size)
     else:
       self.img_dec = ImgDecoder(cfg, dense_input_size)
@@ -256,7 +256,7 @@ class TransformerDynamic(nn.Module):
     self.pre_lnorm = cfg.arch.world_model.transformer.pre_lnorm
     self.act_after_emb = cfg.arch.world_model.act_after_emb
 
-    if cfg.env.name == 'paysim':
+    if 'paysim' in cfg.env.name or 'amlsim' in cfg.env.name:
       self.img_enc = TabularEncoder(cfg)
     else:
       self.img_enc = ImgEncoder(cfg)
