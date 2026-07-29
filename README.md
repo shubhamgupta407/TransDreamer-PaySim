@@ -67,6 +67,42 @@ TransDreamer natively expects 3D image tensors `(C, H, W)` and relies heavily on
 3. **Inference Pipeline (`evaluate_fraud.py`)**:
    - A custom evaluation script that loads trained checkpoints, feeds unseen sequences of account history, and predicts the "novel future state" to manually evaluate if the model is learning the structure of banking behavior over time.
 
+### Temporal Trajectory Construction
+To adapt static tabular logs for a Reinforcement Learning World Model, we fundamentally restructure the data into temporal sequences:
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'lineColor': '#64748b' }}}%%
+flowchart TD
+    subgraph Raw [Raw AMLSim Dataset]
+        direction LR
+        R1[fa:fa-table Transaction 1]:::raw
+        R2[fa:fa-table Transaction 2]:::raw
+        R3[fa:fa-table Transaction 3]:::raw
+        R1 ~~~ R2 ~~~ R3
+    end
+
+    subgraph Grouping [Temporal Grouping Logic]
+        direction TB
+        G1{Group by \n nameOrig}:::process
+        G2[fa:fa-sort Sort by \n Step/Time]:::process
+    end
+
+    subgraph Trajectories [Sequential Trajectories for Gym Env]
+        direction LR
+        T1([fa:fa-user Account A \n t=1 &rarr; t=2 &rarr; t=3]):::traj
+        T2([fa:fa-user Account B \n t=1 &rarr; t=2]):::traj
+        T3([fa:fa-user Account C \n t=1 &rarr; t=2 &rarr; t=3 &rarr; t=4]):::traj
+    end
+    
+    Raw --> G1
+    G1 --> G2
+    G2 --> Trajectories
+
+    classDef raw fill:#f8fafc,stroke:#cbd5e1,stroke-width:2px,color:#334155,rx:4,ry:4;
+    classDef process fill:#fef3c7,stroke:#fcd34d,stroke-width:2px,color:#92400e,rx:8,ry:8;
+    classDef traj fill:#dbeafe,stroke:#93c5fd,stroke-width:2px,color:#1e40af,rx:16,ry:16;
+```
+
 ## 🔬 Experimental Findings
 
 We trained this baseline on a Cloud GPU for 30,000 steps. Using the custom inference script (`evaluate_fraud.py`), we evaluated the model against unseen accounts and discovered two critical insights:
@@ -80,6 +116,31 @@ When the model predicts future states, it predicts the transaction `Amount`, `Ol
 However, we found that the model's predictions **consistently violate this arithmetic by roughly $8 to $12** across all unseen accounts. 
 
 **Why?** The architecture's `TabularDecoder` models each of these 7 tabular features as completely independent Gaussian distributions (`Independent(Normal(...))`). There is no structural joint constraint forcing them to align algebraically. The model must learn this arithmetic purely from data. 
+
+#### Inference & Evaluation Flow
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'lineColor': '#64748b' }}}%%
+sequenceDiagram
+    autonumber
+    participant Env as AMLSimEnv (Ground Truth)
+    participant Model as TransDreamer (Latent State)
+    participant Dec as Tabular Decoder (Independent Heads)
+    
+    Env->>Model: Feed History (t=1 to 10)
+    Note over Model: Build Temporal Context
+    Model->>Dec: Combined Latent State (RNN + Prior)
+    
+    rect rgb(241, 245, 249)
+        Note right of Dec: Independent Gaussian Decoding
+        Dec-->>Dec: Head 1: Amount Prediction
+        Dec-->>Dec: Head 2: Old Balance Prediction
+        Dec-->>Dec: Head 3: New Balance Prediction
+    end
+    
+    Dec->>Env: Predicted Novel State (t=11)
+    
+    Note over Env,Dec: Arithmetic Evaluation Metric: <br> | (Old Balance + Amount) - New Balance | &ne; 0
+```
 
 **Conclusion:** Tracking the arithmetic error (`|Old + Amount - New|`) is a highly effective, novel metric to evaluate how well a World Model is learning the latent "rules" of a tabular environment, far beyond what standard loss curves can show.
 
