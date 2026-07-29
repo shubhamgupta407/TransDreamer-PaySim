@@ -5,19 +5,51 @@ This repository adapts **[TransDreamer](https://github.com/danijar/dreamerv2)**â
 ## ðŸš€ What We Did & Architecture
 
 ```mermaid
-graph TD
-    A[(AMLSim tx_log.csv)] -->|Tabular Data| B[AMLSimEnv Gym Wrapper]
-    B -->|7D State Vector| C[Tabular Encoder MLP]
-    C -->|d_model=600| D((Transformer RSSM\nWorld Model))
-    
-    D -->|Reconstruction| E[Tabular Decoder MLP]
-    D -->|Reward Prediction| F[Dense Decoder]
-    D -->|Action Policy| G[Actor Decoder]
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style E fill:#bfb,stroke:#333,stroke-width:2px
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'lineColor': '#64748b' }}}%%
+flowchart LR
+    %% Data Pipeline Subgraph
+    subgraph Data [Data Ingestion Pipeline]
+        direction TB
+        DB[(fa:fa-database AMLSim \ntx_log.csv)]:::database
+        Env[fa:fa-cogs AMLSimEnv \nGym Wrapper]:::component
+        DB -->|Raw Features| Env
+    end
+
+    %% State Representation Subgraph
+    subgraph Encoder [State Representation]
+        direction TB
+        State[fa:fa-cube 7D State Vector]:::tensor
+        TabEnc[fa:fa-network-wired Tabular Encoder \nMLP]:::neuralnet
+        Env -->|Extracts| State
+        State -->|Input| TabEnc
+    end
+
+    %% World Model Subgraph
+    subgraph WM [TransDreamer Latent Dynamics]
+        direction TB
+        RSSM{fa:fa-brain Transformer \nRSSM Core}:::core
+        TabEnc -->|d_model=600| RSSM
+    end
+
+    %% Decoders Subgraph
+    subgraph Decoders [Task Decoders]
+        direction TB
+        Rec[fa:fa-eye Tabular Decoder \n Observation Prior]:::decoder
+        Rew[fa:fa-star Dense Decoder \n Anomaly/Reward]:::decoder
+        Act[fa:fa-bolt Actor Decoder \n Policy]:::decoder
+        
+        RSSM -->|State \n Reconstruction| Rec
+        RSSM -->|Fraud \n Probability| Rew
+        RSSM -->|Allow / Block| Act
+    end
+
+    %% Styling Classes
+    classDef database fill:#f8fafc,stroke:#cbd5e1,stroke-width:2px,color:#334155;
+    classDef component fill:#f1f5f9,stroke:#94a3b8,stroke-width:2px,color:#0f172a,rx:8,ry:8;
+    classDef tensor fill:#e0f2fe,stroke:#7dd3fc,stroke-width:2px,color:#0369a1,rx:4,ry:4;
+    classDef neuralnet fill:#dbeafe,stroke:#93c5fd,stroke-width:2px,color:#1e40af,rx:8,ry:8;
+    classDef core fill:#ede9fe,stroke:#c4b5fd,stroke-width:3px,color:#5b21b6;
+    classDef decoder fill:#dcfce7,stroke:#86efac,stroke-width:2px,color:#166534,rx:8,ry:8;
 ```
 
 TransDreamer natively expects 3D image tensors `(C, H, W)` and relies heavily on Convolutional Neural Networks (CNNs). To run it on tabular fraud data, we performed a "brain transplant" on the architecture:
