@@ -5,51 +5,45 @@ This repository adapts **[TransDreamer](https://github.com/danijar/dreamerv2)**�
 ## 🚀 What We Did & Architecture
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'lineColor': '#64748b' }}}%%
 flowchart LR
-    %% Data Pipeline Subgraph
-    subgraph Data [Data Ingestion Pipeline]
+    subgraph Data [Data Ingestion]
         direction TB
-        DB[(fa:fa-database AMLSim \ntx_log.csv)]:::database
-        Env[fa:fa-cogs AMLSimEnv \nGym Wrapper]:::component
+        DB[(AMLSim \n tx_log.csv)]:::db
+        Env[AMLSimEnv \n Wrapper]:::env
         DB -->|Raw Features| Env
     end
 
-    %% State Representation Subgraph
-    subgraph Encoder [State Representation]
+    subgraph Encoder [Representation]
         direction TB
-        State[fa:fa-cube 7D State Vector]:::tensor
-        TabEnc[fa:fa-network-wired Tabular Encoder \nMLP]:::neuralnet
+        State[7D State Vector]:::tensor
+        TabEnc[Tabular Encoder MLP]:::net
         Env -->|Extracts| State
         State -->|Input| TabEnc
     end
 
-    %% World Model Subgraph
-    subgraph WM [TransDreamer Latent Dynamics]
+    subgraph WM [Latent Dynamics]
         direction TB
-        RSSM{fa:fa-brain Transformer \nRSSM Core}:::core
+        RSSM{Transformer \n RSSM Core}:::core
         TabEnc -->|d_model=600| RSSM
     end
 
-    %% Decoders Subgraph
     subgraph Decoders [Task Decoders]
         direction TB
-        Rec[fa:fa-eye Tabular Decoder \n Observation Prior]:::decoder
-        Rew[fa:fa-star Dense Decoder \n Anomaly/Reward]:::decoder
-        Act[fa:fa-bolt Actor Decoder \n Policy]:::decoder
+        Rec[Tabular Decoder \n Observation Prior]:::dec
+        Rew[Dense Decoder \n Anomaly/Reward]:::dec
+        Act[Actor Decoder \n Policy]:::dec
         
-        RSSM -->|State \n Reconstruction| Rec
-        RSSM -->|Fraud \n Probability| Rew
-        RSSM -->|Allow / Block| Act
+        RSSM -->|State Recon| Rec
+        RSSM -->|Fraud Prob| Rew
+        RSSM -->|Allow/Block| Act
     end
 
-    %% Styling Classes
-    classDef database fill:#f8fafc,stroke:#cbd5e1,stroke-width:2px,color:#334155;
-    classDef component fill:#f1f5f9,stroke:#94a3b8,stroke-width:2px,color:#0f172a,rx:8,ry:8;
-    classDef tensor fill:#e0f2fe,stroke:#7dd3fc,stroke-width:2px,color:#0369a1,rx:4,ry:4;
-    classDef neuralnet fill:#dbeafe,stroke:#93c5fd,stroke-width:2px,color:#1e40af,rx:8,ry:8;
-    classDef core fill:#ede9fe,stroke:#c4b5fd,stroke-width:3px,color:#5b21b6;
-    classDef decoder fill:#dcfce7,stroke:#86efac,stroke-width:2px,color:#166534,rx:8,ry:8;
+    classDef db fill:#ffffff,stroke:#cbd5e1,stroke-width:2px,color:#334155,shape:cylinder;
+    classDef env fill:#f8fafc,stroke:#94a3b8,stroke-width:2px,color:#0f172a,rx:4,ry:4;
+    classDef tensor fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a,rx:2,ry:2;
+    classDef net fill:#e2e8f0,stroke:#475569,stroke-width:2px,color:#0f172a,rx:4,ry:4;
+    classDef core fill:#334155,stroke:#0f172a,stroke-width:2px,color:#ffffff;
+    classDef dec fill:#f8fafc,stroke:#94a3b8,stroke-width:2px,color:#0f172a,rx:4,ry:4;
 ```
 
 TransDreamer natively expects 3D image tensors `(C, H, W)` and relies heavily on Convolutional Neural Networks (CNNs). To run it on tabular fraud data, we performed a "brain transplant" on the architecture:
@@ -71,36 +65,33 @@ TransDreamer natively expects 3D image tensors `(C, H, W)` and relies heavily on
 To adapt static tabular logs for a Reinforcement Learning World Model, we fundamentally restructure the data into temporal sequences:
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'lineColor': '#64748b' }}}%%
-flowchart TD
-    subgraph Raw [Raw AMLSim Dataset]
-        direction LR
-        R1[fa:fa-table Transaction 1]:::raw
-        R2[fa:fa-table Transaction 2]:::raw
-        R3[fa:fa-table Transaction 3]:::raw
-        R1 ~~~ R2 ~~~ R3
-    end
-
-    subgraph Grouping [Temporal Grouping Logic]
+flowchart LR
+    subgraph Raw [Static Dataset]
         direction TB
-        G1{Group by \n nameOrig}:::process
-        G2[fa:fa-sort Sort by \n Step/Time]:::process
+        R1[Transaction 1]:::raw
+        R2[Transaction 2]:::raw
+        R3[Transaction 3]:::raw
     end
 
-    subgraph Trajectories [Sequential Trajectories for Gym Env]
-        direction LR
-        T1([fa:fa-user Account A \n t=1 &rarr; t=2 &rarr; t=3]):::traj
-        T2([fa:fa-user Account B \n t=1 &rarr; t=2]):::traj
-        T3([fa:fa-user Account C \n t=1 &rarr; t=2 &rarr; t=3 &rarr; t=4]):::traj
+    subgraph Process [Temporal Sequencing]
+        direction TB
+        G1{Group by \n nameOrig}:::proc
+        G2[Sort by Time]:::proc
+        G1 --> G2
+    end
+
+    subgraph Traj [Gym Environment Trajectories]
+        direction TB
+        T1([Account A: t=1 → t=2 → t=3]):::traj
+        T2([Account B: t=1 → t=2]):::traj
     end
     
-    Raw --> G1
-    G1 --> G2
-    G2 --> Trajectories
+    Raw --> Process
+    Process --> Traj
 
-    classDef raw fill:#f8fafc,stroke:#cbd5e1,stroke-width:2px,color:#334155,rx:4,ry:4;
-    classDef process fill:#fef3c7,stroke:#fcd34d,stroke-width:2px,color:#92400e,rx:8,ry:8;
-    classDef traj fill:#dbeafe,stroke:#93c5fd,stroke-width:2px,color:#1e40af,rx:16,ry:16;
+    classDef raw fill:#ffffff,stroke:#cbd5e1,stroke-width:2px,color:#334155,rx:2,ry:2;
+    classDef proc fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a;
+    classDef traj fill:#334155,stroke:#0f172a,stroke-width:2px,color:#ffffff,rx:10,ry:10;
 ```
 
 ## 🔬 Experimental Findings
@@ -119,27 +110,22 @@ However, we found that the model's predictions **consistently violate this arith
 
 #### Inference & Evaluation Flow
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'lineColor': '#64748b' }}}%%
 sequenceDiagram
-    autonumber
-    participant Env as AMLSimEnv (Ground Truth)
-    participant Model as TransDreamer (Latent State)
-    participant Dec as Tabular Decoder (Independent Heads)
+    participant Env as AMLSimEnv
+    participant Model as TransDreamer
+    participant Dec as Tabular Decoder
     
     Env->>Model: Feed History (t=1 to 10)
-    Note over Model: Build Temporal Context
     Model->>Dec: Combined Latent State (RNN + Prior)
     
-    rect rgb(241, 245, 249)
-        Note right of Dec: Independent Gaussian Decoding
-        Dec-->>Dec: Head 1: Amount Prediction
-        Dec-->>Dec: Head 2: Old Balance Prediction
-        Dec-->>Dec: Head 3: New Balance Prediction
-    end
+    Note over Dec: Independent Gaussian Decoding
+    Dec-->>Dec: Head 1: Amount
+    Dec-->>Dec: Head 2: Old Balance
+    Dec-->>Dec: Head 3: New Balance
     
     Dec->>Env: Predicted Novel State (t=11)
     
-    Note over Env,Dec: Arithmetic Evaluation Metric: <br> | (Old Balance + Amount) - New Balance | &ne; 0
+    Note over Env,Dec: Arithmetic Metric: |(Old + Amount) - New| != 0
 ```
 
 **Conclusion:** Tracking the arithmetic error (`|Old + Amount - New|`) is a highly effective, novel metric to evaluate how well a World Model is learning the latent "rules" of a tabular environment, far beyond what standard loss curves can show.
